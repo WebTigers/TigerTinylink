@@ -58,6 +58,19 @@ final class ModuleContractTest extends TestCase
         $this->assertSame(['tinylink', 'Tinylink', 'free', 'BSD-3-Clause'], [$m['slug'], $m['namespace'], $m['pricing']['model'], $m['license']]);
     }
 
+    public function testRuntimeCodeNeverNamesAControllerClass(): void
+    {
+        // ZF1's module autoloader does not load controllers, so `Tinylink_FooController::X` from any other class
+        // is a fatal at runtime — while this suite's bootstrap DOES load them, so tests would pass (it 500'd the
+        // links page on a real install once). Shared constants live on a service.
+        foreach (['controllers', 'services', 'models', 'forms', 'views'] as $dir) {
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->root() . '/' . $dir, \FilesystemIterator::SKIP_DOTS)) as $f) {
+                if (!$f->isFile()) { continue; }
+                $this->assertDoesNotMatchRegularExpression('/Tinylink_\w+Controller::/', (string) file_get_contents($f->getPathname()), $f->getFilename());
+            }
+        }
+    }
+
     public function testEveryLocaleHasEveryKey(): void
     {
         $en = require $this->root() . '/languages/en/tinylink.php';

@@ -13,6 +13,27 @@
  */
 class Tinylink_Service_Link extends Tiger_Service_Service
 {
+    /**
+     * Default public hits (redirects, links-page views) per visitor IP per minute; `tiger.tinylink.rate_limit`
+     * overrides. Lives here, not on a controller: controllers are not autoloadable, so one controller can't
+     * read another's constant at runtime.
+     */
+    const DEFAULT_RATE_LIMIT = 120;
+
+    /**
+     * The configured public rate limit (hits per IP per minute).
+     *
+     * @return int
+     */
+    public static function rateLimit(): int
+    {
+        $cfg = Zend_Registry::isRegistered('Zend_Config') ? Zend_Registry::get('Zend_Config') : null;
+        $t   = $cfg ? $cfg->get('tiger') : null;
+        $m   = $t ? $t->get('tinylink') : null;
+        $v   = $m ? $m->get('rate_limit') : null;
+        return $v !== null && is_numeric((string) $v) ? (int) (string) $v : self::DEFAULT_RATE_LIMIT;
+    }
+
     /** Length of an auto-generated slug. */
     const AUTO_SLUG_LENGTH = 7;
 

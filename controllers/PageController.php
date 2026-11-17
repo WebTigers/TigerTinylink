@@ -22,7 +22,7 @@ class Tinylink_PageController extends Tiger_Controller_Action
     public function viewAction()
     {
         $res = $this->getResponse();
-        if (!Tiger_RateLimit::hit('tinylink.page', Tiger_RateLimit::ipKey(), Tinylink_GoController::DEFAULT_RATE_LIMIT, 60)) {
+        if (!Tiger_RateLimit::hit('tinylink.page', Tiger_RateLimit::ipKey(), Tinylink_Service_Link::rateLimit(), 60)) {
             $res->setHttpResponseCode(429)->setHeader('Retry-After', '60', true);
             $this->_helper->viewRenderer->setNoRender(true);
             $res->setBody('Too many requests.');

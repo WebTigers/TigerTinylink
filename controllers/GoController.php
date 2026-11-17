@@ -15,9 +15,6 @@
  */
 class Tinylink_GoController extends Zend_Controller_Action
 {
-    /** Default redirects allowed per visitor IP per minute (tiger.tinylink.rate_limit overrides). */
-    const DEFAULT_RATE_LIMIT = 120;
-
     /** The query parameter a links-page button carries to attribute its tap (stripped before the redirect). */
     const PAGE_PARAM = '_tlp';
 
@@ -33,7 +30,7 @@ class Tinylink_GoController extends Zend_Controller_Action
         if ($this->_helper->hasHelper('layout')) { $this->_helper->layout()->disableLayout(); }
         $res = $this->getResponse();
 
-        if (!Tiger_RateLimit::hit('tinylink.redirect', Tiger_RateLimit::ipKey(), $this->_rateLimit(), 60)) {
+        if (!Tiger_RateLimit::hit('tinylink.redirect', Tiger_RateLimit::ipKey(), Tinylink_Service_Link::rateLimit(), 60)) {
             $res->setHttpResponseCode(429)->setHeader('Retry-After', '60', true)->setBody('Too many requests.');
             return;
         }
@@ -93,13 +90,4 @@ class Tinylink_GoController extends Zend_Controller_Action
         return (new Tinylink_Model_Page())->findForOrg($org, $id) ? $id : null;
     }
 
-    /** Redirects per IP per minute. */
-    protected function _rateLimit(): int
-    {
-        $cfg = Zend_Registry::isRegistered('Zend_Config') ? Zend_Registry::get('Zend_Config') : null;
-        $t   = $cfg ? $cfg->get('tiger') : null;
-        $m   = $t ? $t->get('tinylink') : null;
-        $v   = $m ? $m->get('rate_limit') : null;
-        return $v !== null && is_numeric((string) $v) ? (int) (string) $v : self::DEFAULT_RATE_LIMIT;
-    }
 }
