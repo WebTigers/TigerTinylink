@@ -18,6 +18,8 @@
     background: var(--tl-surface);
     color: var(--tl-text);
     padding: 2.5rem 1rem 3rem;
+    min-height: 100vh;      /* the page's background fills the screen, however few blocks it has */
+    min-height: 100dvh;
 }
 .tl-bg--soft  { --tl-surface: var(--bs-tertiary-bg); }
 .tl-bg--brand {
