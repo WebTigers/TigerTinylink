@@ -1,0 +1,244 @@
+<?php
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 WebTigers. Tiger™ and WebTigers™ are trademarks of WebTigers.
+/**
+ * The links-page editor. Data loads from Tinylink_Service_Page::get; saves go to Tinylink_Service_Page::save
+ * and Tinylink_Service_Block::{save,setStatus,delete,reorder}. Blocks reorder by drag (SortableJS, loaded by
+ * the admin layout); images come from the media library (TigerMediaPicker). The preview is the real public page.
+ * Behaviour: assets/js/tinylink.pages-edit.js.
+ */
+$f  = $this->form;
+$it = $this->item;
+$el = static fn($n) => $f->getElement($n);
+$ie = static fn($n) => $it->getElement($n);
+$e  = fn($s) => $this->escape((string) $s);
+$this->i18n([
+    'saved'       => 'tinylink.page.saved',
+    'itemSaved'   => 'tinylink.item.saved',
+    'itemDeleted' => 'tinylink.item.deleted',
+    'confirmItem' => 'tinylink.items.confirm_delete',
+    'del'         => 'tinylink.action.delete',
+    'edit'        => 'tinylink.action.edit',
+    'show'        => 'tinylink.action.enable',
+    'hide'        => 'tinylink.action.disable',
+    'hidden'      => 'tinylink.items.hidden',
+    'scheduled'   => 'tinylink.items.scheduled',
+    'featured'    => 'tinylink.items.featured',
+    'empty'       => 'tinylink.items.empty',
+    'netError'    => 'tinylink.js.network_error',
+    'kind_link'   => 'tinylink.kind.link',
+    'kind_header' => 'tinylink.kind.header',
+    'kind_divider'=> 'tinylink.kind.divider',
+    'kind_signup' => 'tinylink.kind.signup',
+    'kind_product'=> 'tinylink.kind.product',
+    'addTitle'    => 'tinylink.items.add',
+    'editTitle'   => 'tinylink.items.edit',
+    'noReferrer'  => 'tinylink.stats.direct',
+    'remove'      => 'tinylink.action.remove',
+]);
+$this->pageScript('/_modules/tinylink/js/tinylink.pages-edit.js', ['defer' => true]);
+?>
+<div id="tlp-root" data-page-id="<?= $e($this->pageId) ?>" data-site="<?= $e($this->siteBase) ?>"></div>
+
+<div class="d-flex align-items-center justify-content-between mb-4 gap-3">
+    <div class="min-w-0">
+        <a href="/tinylink/pages" class="small text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i><?= $e($this->t('tinylink.pages.title')) ?></a>
+        <h1 class="h3 mb-1 text-truncate" id="tlp-heading">…</h1>
+        <p class="text-body-secondary mb-0 small" id="tlp-url"></p>
+    </div>
+    <div class="text-nowrap">
+        <a id="tlp-open" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square me-2"></i><?= $e($this->t('tinylink.pages.open')) ?></a>
+        <button type="button" id="tlp-save" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i><?= $e($this->t('tinylink.action.save')) ?></button>
+    </div>
+</div>
+
+<div id="tlp-feedback"></div>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <form id="tlp-form" onsubmit="return false;" novalidate>
+      <?= $el('_csrf') ?>
+      <div class="card mb-4">
+        <div class="card-header fw-semibold"><i class="fa-solid fa-user me-2"></i><?= $e($this->t('tinylink.pages.profile')) ?></div>
+        <div class="card-body">
+          <div class="d-flex gap-3 align-items-center mb-3">
+            <img id="tlp-avatar" src="" alt="" width="72" height="72" class="rounded-circle object-fit-cover bg-body-tertiary d-none">
+            <div>
+              <input type="hidden" name="avatar_media_id" id="tlp-avatar-id">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="tlp-avatar-pick"><i class="fa-regular fa-image me-1"></i><?= $e($this->t('tinylink.pages.avatar')) ?></button>
+              <button type="button" class="btn btn-sm btn-link text-danger" id="tlp-avatar-clear"><?= $e($this->t('tinylink.action.remove')) ?></button>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-7">
+              <label class="form-label" for="<?= $e($el('title')->getId()) ?>"><?= $e($this->t('tinylink.field.page_title')) ?></label>
+              <?= $el('title') ?>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="<?= $e($el('handle')->getId()) ?>"><?= $e($this->t('tinylink.field.handle')) ?></label>
+              <div class="input-group"><span class="input-group-text small">/links/</span><?= $el('handle') ?></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="<?= $e($el('bio')->getId()) ?>"><?= $e($this->t('tinylink.field.bio')) ?></label>
+              <?= $el('bio') ?>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="<?= $e($el('layout')->getId()) ?>"><?= $e($this->t('tinylink.field.layout')) ?></label>
+              <select class="form-select" name="layout" id="<?= $e($el('layout')->getId()) ?>">
+                <?php foreach (Tinylink_Model_Page::LAYOUTS as $l): ?><option value="<?= $e($l) ?>"><?= $e($this->t('tinylink.layout.' . $l)) ?></option><?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="<?= $e($el('background')->getId()) ?>"><?= $e($this->t('tinylink.field.background')) ?></label>
+              <select class="form-select" name="background" id="<?= $e($el('background')->getId()) ?>">
+                <?php foreach (Tinylink_Model_Page::BACKGROUNDS as $b): ?><option value="<?= $e($b) ?>"><?= $e($this->t('tinylink.background.' . $b)) ?></option><?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="tlp-default">
+                <label class="form-check-label" for="tlp-default"><?= $e($this->t('tinylink.field.is_default')) ?></label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="tlp-active" checked>
+                <label class="form-check-label" for="tlp-active"><?= $e($this->t('tinylink.field.page_active')) ?></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header fw-semibold"><i class="fa-solid fa-share-nodes me-2"></i><?= $e($this->t('tinylink.pages.social')) ?></div>
+        <div class="card-body">
+          <div class="row g-2" id="tlp-social">
+            <?php foreach ($this->social as $net => [$icon, $label]): ?>
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text" title="<?= $e($label) ?>"><i class="<?= $e($icon) ?>" aria-hidden="true"></i></span>
+                  <input type="<?= $net === 'email' ? 'email' : 'url' ?>" class="form-control" data-social="<?= $e($net) ?>" aria-label="<?= $e($label) ?>" placeholder="<?= $e($net === 'email' ? 'you@example.com' : $label . ' URL') ?>">
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header fw-semibold"><i class="fa-solid fa-magnifying-glass me-2"></i><?= $e($this->t('tinylink.pages.seo')) ?></div>
+        <div class="card-body">
+          <label class="form-label" for="<?= $e($el('seo_description')->getId()) ?>"><?= $e($this->t('tinylink.field.seo_description')) ?></label>
+          <?= $el('seo_description') ?>
+          <div class="d-flex gap-2 align-items-center mt-3">
+            <input type="hidden" name="og_image_media_id" id="tlp-og-id">
+            <img id="tlp-og" src="" alt="" height="48" class="rounded d-none">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="tlp-og-pick"><i class="fa-regular fa-image me-1"></i><?= $e($this->t('tinylink.pages.share_image')) ?></button>
+            <button type="button" class="btn btn-sm btn-link text-danger" id="tlp-og-clear"><?= $e($this->t('tinylink.action.remove')) ?></button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="fw-semibold"><i class="fa-solid fa-layer-group me-2"></i><?= $e($this->t('tinylink.pages.blocks')) ?></span>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-plus me-1"></i><?= $e($this->t('tinylink.items.add')) ?></button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" type="button" data-tlp-add="link"><i class="fa-solid fa-link me-2"></i><?= $e($this->t('tinylink.kind.link')) ?></button></li>
+            <li><button class="dropdown-item" type="button" data-tlp-add="header"><i class="fa-solid fa-heading me-2"></i><?= $e($this->t('tinylink.kind.header')) ?></button></li>
+            <li><button class="dropdown-item" type="button" data-tlp-add="divider"><i class="fa-solid fa-minus me-2"></i><?= $e($this->t('tinylink.kind.divider')) ?></button></li>
+            <?php if ($this->caps['signup']): ?><li><button class="dropdown-item" type="button" data-tlp-add="signup"><i class="fa-solid fa-envelope-open-text me-2"></i><?= $e($this->t('tinylink.kind.signup')) ?></button></li><?php endif; ?>
+            <?php if ($this->caps['product']): ?><li><button class="dropdown-item" type="button" data-tlp-add="product"><i class="fa-solid fa-bag-shopping me-2"></i><?= $e($this->t('tinylink.kind.product')) ?></button></li><?php endif; ?>
+          </ul>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush" id="tlp-items" aria-describedby="tlp-items-help"></ul>
+      <div class="card-footer small text-body-secondary" id="tlp-items-help"><i class="fa-solid fa-grip-vertical me-1"></i><?= $e($this->t('tinylink.items.drag_help')) ?></div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card mb-4">
+      <div class="card-header fw-semibold"><i class="fa-solid fa-chart-column me-2"></i><?= $e($this->t('tinylink.pages.stats')) ?></div>
+      <div class="card-body">
+        <div class="row g-2 text-center mb-3">
+          <div class="col-4"><div class="border rounded p-2"><div class="h5 mb-0" id="tlp-s-views">0</div><div class="small text-body-secondary"><?= $e($this->t('tinylink.pages.views_30d')) ?></div></div></div>
+          <div class="col-4"><div class="border rounded p-2"><div class="h5 mb-0" id="tlp-s-taps">0</div><div class="small text-body-secondary"><?= $e($this->t('tinylink.pages.taps')) ?></div></div></div>
+          <div class="col-4"><div class="border rounded p-2"><div class="h5 mb-0" id="tlp-s-rate">0%</div><div class="small text-body-secondary"><?= $e($this->t('tinylink.pages.tap_rate')) ?></div></div></div>
+        </div>
+        <h2 class="h6"><?= $e($this->t('tinylink.pages.taps_per_button')) ?></h2>
+        <ul class="list-group list-group-flush mb-3" id="tlp-s-items"></ul>
+        <h2 class="h6"><?= $e($this->t('tinylink.stats.referrers')) ?></h2>
+        <ul class="list-group list-group-flush" id="tlp-s-refs"></ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="fa-solid fa-mobile-screen me-2"></i><?= $e($this->t('tinylink.pages.preview')) ?></div>
+      <div class="card-body p-0 bg-body-tertiary d-flex justify-content-center">
+        <iframe id="tlp-preview" title="<?= $e($this->t('tinylink.pages.preview')) ?>" class="border-0 bg-body" width="390" height="720" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Block modal -->
+<div class="modal fade" id="tlp-item-modal" tabindex="-1" aria-labelledby="tlp-item-title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="tlp-item-form" onsubmit="return false;" novalidate>
+        <input type="hidden" name="item_id">
+        <input type="hidden" name="kind">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tlp-item-title"></h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= $e($this->t('tinylink.action.close')) ?>"></button>
+        </div>
+        <div class="modal-body">
+          <div id="tlp-item-feedback"></div>
+          <div class="mb-3" data-for="link header signup product">
+            <label class="form-label" for="<?= $e($ie('label')->getId()) ?>"><?= $e($this->t('tinylink.field.label')) ?></label>
+            <?= $ie('label') ?>
+          </div>
+          <div class="mb-3" data-for="link">
+            <label class="form-label" for="<?= $e($ie('destination')->getId()) ?>"><?= $e($this->t('tinylink.field.destination')) ?></label>
+            <?= $ie('destination') ?>
+            <div class="form-text" id="tlp-item-short"></div>
+          </div>
+          <div class="mb-3" data-for="product">
+            <label class="form-label" for="tlp-item-product"><?= $e($this->t('tinylink.kind.product')) ?></label>
+            <select class="form-select" id="tlp-item-product" name="ref"></select>
+          </div>
+          <div class="row g-3 mb-3" data-for="link">
+            <div class="col-6">
+              <label class="form-label" for="<?= $e($ie('icon')->getId()) ?>"><?= $e($this->t('tinylink.field.icon')) ?></label>
+              <?= $ie('icon') ?>
+            </div>
+            <div class="col-6 d-flex align-items-end gap-2">
+              <input type="hidden" name="thumbnail_media_id" id="tlp-thumb-id">
+              <img id="tlp-thumb" src="" alt="" width="38" height="38" class="rounded object-fit-cover d-none">
+              <button type="button" class="btn btn-outline-secondary" id="tlp-thumb-pick"><i class="fa-regular fa-image me-1"></i><?= $e($this->t('tinylink.field.thumbnail')) ?></button>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3" data-for="link">
+            <input class="form-check-input" type="checkbox" role="switch" id="tlp-featured">
+            <label class="form-check-label" for="tlp-featured"><?= $e($this->t('tinylink.field.featured')) ?></label>
+          </div>
+          <div class="row g-3" data-for="link header divider signup product">
+            <div class="col-6">
+              <label class="form-label" for="<?= $e($ie('show_from')->getId()) ?>"><?= $e($this->t('tinylink.field.show_from')) ?></label>
+              <?= $ie('show_from') ?>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="<?= $e($ie('show_until')->getId()) ?>"><?= $e($this->t('tinylink.field.show_until')) ?></label>
+              <?= $ie('show_until') ?>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= $e($this->t('tinylink.action.cancel')) ?></button>
+          <button type="button" class="btn btn-primary" id="tlp-item-save"><i class="fa-solid fa-floppy-disk me-2"></i><?= $e($this->t('tinylink.action.save')) ?></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

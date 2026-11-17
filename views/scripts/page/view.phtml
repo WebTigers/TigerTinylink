@@ -1,0 +1,61 @@
+<?php
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 WebTigers. Tiger™ and WebTigers™ are trademarks of WebTigers.
+/**
+ * A public links page, rendered inside the active theme's layout. Markup only — styling is
+ * assets/css/tinylink.page.css, driven by the site's --bs-* skin tokens, so the page reskins with the site.
+ * Every button is a real link to /l/<slug> (counted + redirected), so it works with no JavaScript.
+ */
+$p = $this->page;
+$this->pageStyle('/_modules/tinylink/css/tinylink.page.css');
+$layout = in_array($p['layout'], Tinylink_Model_Page::LAYOUTS, true) ? $p['layout'] : 'stack';
+$bg     = in_array($p['background'], Tinylink_Model_Page::BACKGROUNDS, true) ? $p['background'] : 'plain';
+$e      = fn($s) => $this->escape((string) $s);
+?>
+<div class="tl-page tl-page--<?= $e($layout) ?> tl-bg--<?= $e($bg) ?>">
+  <main class="tl-page__inner">
+    <header class="tl-profile">
+      <?php if ($this->avatarUrl !== ''): ?>
+        <img class="tl-profile__avatar" src="<?= $e($this->avatarUrl) ?>" alt="" width="96" height="96">
+      <?php endif; ?>
+      <h1 class="tl-profile__name"><?= $e($p['title']) ?></h1>
+      <?php if (!empty($p['bio'])): ?>
+        <p class="tl-profile__bio"><?= nl2br($e($p['bio'])) ?></p>
+      <?php endif; ?>
+      <?php if ($this->social): ?>
+        <ul class="tl-social" aria-label="<?= $e($this->t('tinylink.page.social')) ?>">
+          <?php foreach ($this->social as $s): ?>
+            <li><a class="tl-social__link" href="<?= $e($s['href']) ?>" rel="me noopener" target="_blank" aria-label="<?= $e($s['label']) ?>"><i class="<?= $e($s['icon']) ?>" aria-hidden="true"></i></a></li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
+    </header>
+
+    <div class="tl-blocks">
+      <?php foreach ($this->blocks as $b): ?>
+        <?php if ($b['kind'] === 'header'): ?>
+          <h2 class="tl-heading"><?= $e($b['label']) ?></h2>
+        <?php elseif ($b['kind'] === 'divider'): ?>
+          <hr class="tl-divider">
+        <?php elseif ($b['kind'] === 'link' && $b['featured']): ?>
+          <a class="tl-card" href="<?= $e($b['href']) ?>">
+            <?php if ($b['thumb'] !== ''): ?><img class="tl-card__media" src="<?= $e($b['thumb']) ?>" alt="" loading="lazy"><?php endif; ?>
+            <span class="tl-card__label"><?php if ($b['icon'] !== ''): ?><i class="fa-solid fa-<?= $e($b['icon']) ?> me-2" aria-hidden="true"></i><?php endif; ?><?= $e($b['label']) ?></span>
+          </a>
+        <?php elseif ($b['kind'] === 'link'): ?>
+          <a class="tl-button" href="<?= $e($b['href']) ?>">
+            <?php if ($b['thumb'] !== ''): ?><img class="tl-button__thumb" src="<?= $e($b['thumb']) ?>" alt="" loading="lazy"><?php elseif ($b['icon'] !== ''): ?><i class="tl-button__icon fa-solid fa-<?= $e($b['icon']) ?>" aria-hidden="true"></i><?php endif; ?>
+            <span class="tl-button__label"><?= $e($b['label']) ?></span>
+          </a>
+        <?php elseif ($b['kind'] === 'product'): ?>
+          <a class="tl-card tl-card--product" href="<?= $e($b['href']) ?>">
+            <span class="tl-card__label"><?= $e($b['label']) ?></span>
+            <span class="tl-card__price"><?= $e($b['price']) ?> · <?= $e($this->t('tinylink.page.buy')) ?></span>
+          </a>
+        <?php elseif ($b['kind'] === 'signup'): ?>
+          <div class="tl-signup"><?= $b['html'] /* the newsletter module's own escaped form */ ?></div>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </div>
+  </main>
+</div>

@@ -18,6 +18,9 @@ class Tinylink_GoController extends Zend_Controller_Action
     /** Default redirects allowed per visitor IP per minute (tiger.tinylink.rate_limit overrides). */
     const DEFAULT_RATE_LIMIT = 120;
 
+    /** The query parameter a links-page button carries to attribute its tap (stripped before the redirect). */
+    const PAGE_PARAM = '_tlp';
+
     /**
      * Redirect, or 404.
      *
@@ -46,7 +49,7 @@ class Tinylink_GoController extends Zend_Controller_Action
         $refHost = Tinylink_Service_Link::referrerHost((string) ($_SERVER['HTTP_REFERER'] ?? ''));
         $link    = $hit['link'];
         try {
-            (new Tinylink_Model_Click())->log($org, (string) $link['link_id'], $refHost, $class);
+            (new Tinylink_Model_Click())->log($org, (string) $link['link_id'], $refHost, $class, $this->_pageId($org));
             if ($class !== 'bot') {
                 (new Tinylink_Model_Link())->countClick((string) $link['link_id']);
             }
@@ -71,12 +74,23 @@ class Tinylink_GoController extends Zend_Controller_Action
         }
     }
 
-    /** The short link's own query parameters (GET only; the route's `slug` is not one of them). */
+    /**
+     * The short link's own query parameters (GET only). The route's `slug` and the links-page tag `_tlp` are
+     * TigerTinylink's own and never reach the destination.
+     */
     protected function _query(): array
     {
-        $q = $_GET;
-        unset($q['slug']);
-        return is_array($q) ? $q : [];
+        $q = is_array($_GET) ? $_GET : [];
+        unset($q['slug'], $q[self::PAGE_PARAM]);
+        return $q;
+    }
+
+    /** The links page this tap came from (a live page of the SAME org), or null — a forged tag is ignored. */
+    protected function _pageId(string $org): ?string
+    {
+        $id = (string) ($_GET[self::PAGE_PARAM] ?? '');
+        if (!preg_match('/^[0-9a-f-]{36}$/i', $id)) { return null; }
+        return (new Tinylink_Model_Page())->findForOrg($org, $id) ? $id : null;
     }
 
     /** Redirects per IP per minute. */

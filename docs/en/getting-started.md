@@ -42,3 +42,19 @@ secret*, or Matomo — each click is also sent there as a `short_link_click` eve
 
 Each visitor IP may follow up to 120 short links a minute (per web server); past that the site answers
 *429 Too Many Requests*. An administrator can change this with the `tiger.tinylink.rate_limit` setting.
+
+## Links pages
+
+A links page is one address with all your links on it — the kind you put in a social bio, on a business card
+or behind a QR code. Open **Short links › Links pages** and click **New page**.
+
+- **Profile:** a photo from the media library, a name and a short bio. Add your social accounts under
+  **Social links**; they show as a row of icons.
+- **Blocks:** add link buttons, section headings and dividers. With the newsletter module active you can add an
+  **email signup**; with TigerShop, a **product** card. Drag the handle to reorder. The eye button hides a
+  block without deleting it; "Show from / until" schedules it.
+- **Look:** choose a button style and a background. Colours and fonts come from your site's theme and skin.
+- **Address:** `/links/<handle>`. The page marked **Serve this page at /links** is also at `/links`.
+
+Every button is a short link, so taps are counted. The **Last 30 days** panel shows views, taps per button,
+the tap rate and where visitors came from.

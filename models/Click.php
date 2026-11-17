@@ -19,17 +19,40 @@ class Tinylink_Model_Click extends Tiger_Model_Table
      * @param  string      $linkId       the link
      * @param  string|null $referrerHost the referring host, or null
      * @param  string      $uaClass      desktop|mobile|tablet|bot
+     * @param  string|null $pageId       the links page the tap came from, or null
      * @return string                    the click id
      */
-    public function log(string $orgId, string $linkId, ?string $referrerHost, string $uaClass): string
+    public function log(string $orgId, string $linkId, ?string $referrerHost, string $uaClass, ?string $pageId = null): string
     {
         return (string) $this->insert([
             'org_id'        => $orgId,
             'link_id'       => $linkId,
+            'page_id'       => $pageId,
             'clicked_at'    => gmdate('Y-m-d H:i:s'),
             'referrer_host' => $referrerHost !== null ? substr($referrerHost, 0, 191) : null,
             'ua_class'      => $uaClass,
         ]);
+    }
+
+    /**
+     * Human taps per link that came FROM one links page, over the last $days days.
+     *
+     * @param  string $orgId
+     * @param  string $pageId
+     * @param  int    $days 1..365
+     * @return array<string,int> link_id => taps
+     */
+    public function tapsForPage(string $orgId, string $pageId, int $days = 30): array
+    {
+        $db    = $this->getAdapter();
+        $since = gmdate('Y-m-d 00:00:00', time() - (max(1, min(365, $days)) - 1) * 86400);
+        $out   = [];
+        foreach ($db->fetchAll($db->select()->from($this->_name, ['link_id', 'n' => new Zend_Db_Expr('COUNT(*)')])
+                     ->where('org_id = ?', $orgId)->where('page_id = ?', $pageId)->where('deleted = 0')
+                     ->where('ua_class <> ?', 'bot')->where('clicked_at >= ?', $since)->group('link_id')) as $r) {
+            $out[(string) $r['link_id']] = (int) $r['n'];
+        }
+        return $out;
     }
 
     /**

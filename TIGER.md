@@ -16,6 +16,10 @@ codes and every other parameter intact — and counts every click.*
 - **Works with your analytics, whichever it is.** With Google Analytics 4 (Measurement Protocol secret) or
   Matomo set up in Tiger's Analytics settings, each click is also sent as a `short_link_click` event. No
   analytics? Redirects and local counts work anyway.
+- **Links pages (link-in-bio).** `yoursite.com/links/you` — a photo, a bio, social icons and a stack of buttons,
+  in your site's own theme. Headings, dividers, featured cards, an email signup and product cards; drag to
+  reorder; schedule a block to appear or disappear. Every button is a short link, so you see views, taps per
+  button and where visitors came from — on your domain, not someone else's.
 - **Not just for marketing.** Any long URL can sit behind a short one: a booking page, a file, a form.
 - **301 or 302, expiry dates, enable/disable** per link. A random slug, or one you choose.
 - **Agents can drive it.** Every action is an `/api` operation, typed for MCP, so an AI client can create and

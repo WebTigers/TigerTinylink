@@ -19,6 +19,14 @@ Activation runs the two migrations (`tinylink_link`, `tinylink_click`) and adds 
 - **Analytics:** set up GA4 (with a Measurement Protocol API secret) or Matomo under Admin → Analytics and each
   human click is also sent there as a `short_link_click` event (parameters `slug`, `device`).
 
+## Links pages
+
+**Admin → Short links → Links pages → New page.** Give it a name and an address (`/links/<handle>`), then add
+blocks: link buttons, headings, dividers, an email signup (newsletter module) or a product (TigerShop). Drag
+to reorder; the preview on the right is the live page. `/links` serves the page marked "Serve this page at
+/links" (an org's first page, until you choose another). Each button is a short link, so the page's stats
+show taps per button.
+
 ## Settings
 
 | Config key | Default | |
@@ -29,7 +37,8 @@ The `/l/` prefix is a route in `configs/routes.ini`; change it there if your sit
 
 ## API / MCP
 
-`tinylink/link/{datatable, get, save, setStatus, delete, stats}` — admin role, scoped to the caller's org. A
+`tinylink/link/{datatable, get, save, setStatus, delete, stats}`, `tinylink/page/{list, get, save, delete, stats}`
+and `tinylink/block/{save, setStatus, delete, reorder}` — admin role, scoped to the caller's org. A
 scoped MCP token reaches them when "TigerTinylink — short links" is ticked in its scope.
 
 ## Development

@@ -1,0 +1,97 @@
+/* SPDX-License-Identifier: BSD-3-Clause · © 2026 WebTigers */
+/*
+ * TigerTinylink — the public links page. Every colour, radius and font comes from the site's Bootstrap skin
+ * tokens (--bs-*), so the page follows the active theme, its skin and light/dark mode. Layout variants are
+ * classes on .tl-page: --stack (default), --pill, --outline. Backgrounds: .tl-bg--plain | --soft | --brand.
+ * Mobile-first: one column, 48px+ targets with 12px between them, a visible focus ring on every control.
+ */
+.tl-page {
+    --tl-max: 34rem;
+    --tl-gap: .75rem;
+    --tl-radius: var(--bs-border-radius-lg, .5rem);
+    --tl-btn-bg: var(--bs-body-bg);
+    --tl-btn-fg: var(--bs-body-color);
+    --tl-btn-border: var(--bs-border-color);
+    --tl-surface: var(--bs-body-bg);
+    --tl-text: var(--bs-body-color);
+    --tl-muted: var(--bs-secondary-color);
+    background: var(--tl-surface);
+    color: var(--tl-text);
+    padding: 2.5rem 1rem 3rem;
+}
+.tl-bg--soft  { --tl-surface: var(--bs-tertiary-bg); }
+.tl-bg--brand {
+    --tl-surface: var(--bs-primary);
+    --tl-text: #fff;
+    --tl-muted: rgba(255, 255, 255, .85);
+    --tl-btn-bg: #fff;
+    --tl-btn-fg: var(--bs-primary);
+    --tl-btn-border: transparent;
+    background: linear-gradient(160deg, var(--bs-primary), color-mix(in srgb, var(--bs-primary) 55%, #000));
+}
+.tl-page__inner { max-width: var(--tl-max); margin: 0 auto; }
+
+/* profile */
+.tl-profile { text-align: center; margin-bottom: 1.75rem; }
+.tl-profile__avatar {
+    width: 96px; height: 96px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto .75rem;
+    border: 3px solid var(--tl-btn-bg); box-shadow: var(--bs-box-shadow-sm);
+}
+.tl-profile__name { font-size: 1.5rem; font-weight: 700; margin: 0 0 .25rem; color: var(--tl-text); }
+.tl-profile__bio  { color: var(--tl-muted); margin: 0 auto; max-width: 28rem; }
+
+.tl-social { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: .5rem; }
+.tl-social__link {
+    display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%;
+    color: var(--tl-text); font-size: 1.25rem; text-decoration: none; transition: transform .15s ease, background-color .15s ease;
+}
+.tl-social__link:hover { background: color-mix(in srgb, var(--tl-text) 10%, transparent); transform: translateY(-1px); }
+
+/* blocks */
+.tl-blocks { display: flex; flex-direction: column; gap: var(--tl-gap); }
+.tl-heading { font-size: .8125rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tl-muted); text-align: center; margin: 1rem 0 0; }
+.tl-divider { border: 0; border-top: 1px solid color-mix(in srgb, var(--tl-text) 20%, transparent); margin: .5rem 0; opacity: 1; }
+
+.tl-button {
+    position: relative; display: flex; align-items: center; justify-content: center; gap: .75rem;
+    min-height: 3.25rem; padding: .75rem 3rem; border-radius: var(--tl-radius);
+    background: var(--tl-btn-bg); color: var(--tl-btn-fg); border: 1px solid var(--tl-btn-border);
+    font-weight: 600; text-align: center; text-decoration: none; box-shadow: var(--bs-box-shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.tl-button:hover { transform: translateY(-2px); box-shadow: var(--bs-box-shadow); color: var(--tl-btn-fg); }
+.tl-button__icon, .tl-button__thumb { position: absolute; left: .75rem; }
+.tl-button__thumb { width: 2.25rem; height: 2.25rem; border-radius: calc(var(--tl-radius) - .125rem); object-fit: cover; }
+
+.tl-card {
+    display: block; overflow: hidden; border-radius: var(--tl-radius); text-decoration: none;
+    background: var(--tl-btn-bg); color: var(--tl-btn-fg); border: 1px solid var(--tl-btn-border); box-shadow: var(--bs-box-shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.tl-card:hover { transform: translateY(-2px); box-shadow: var(--bs-box-shadow); color: var(--tl-btn-fg); }
+.tl-card__media { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.tl-card__label { display: block; padding: .875rem 1rem; font-weight: 700; text-align: center; }
+.tl-card--product .tl-card__label { padding-bottom: .25rem; }
+.tl-card__price { display: block; padding: 0 1rem .875rem; text-align: center; color: var(--bs-primary); font-weight: 600; }
+.tl-bg--brand .tl-card__price { color: var(--tl-btn-fg); }
+
+.tl-signup { padding: 1rem; border-radius: var(--tl-radius); background: var(--tl-btn-bg); color: var(--bs-body-color); border: 1px solid var(--tl-btn-border); }
+
+/* layouts */
+.tl-page--pill .tl-button { border-radius: 999px; }
+.tl-page--outline .tl-button, .tl-page--outline .tl-card {
+    background: transparent; color: var(--tl-text); border: 2px solid currentColor; box-shadow: none;
+}
+.tl-page--outline .tl-button:hover, .tl-page--outline .tl-card:hover { background: color-mix(in srgb, var(--tl-text) 8%, transparent); color: var(--tl-text); }
+
+/* focus: always visible */
+.tl-button:focus-visible, .tl-card:focus-visible, .tl-social__link:focus-visible {
+    outline: 3px solid var(--bs-focus-ring-color, color-mix(in srgb, var(--bs-primary) 50%, transparent));
+    outline-offset: 3px;
+}
+.tl-bg--brand .tl-button:focus-visible, .tl-bg--brand .tl-card:focus-visible, .tl-bg--brand .tl-social__link:focus-visible { outline-color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tl-button, .tl-card, .tl-social__link { transition: none; }
+    .tl-button:hover, .tl-card:hover, .tl-social__link:hover { transform: none; }
+}
