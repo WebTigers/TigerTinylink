@@ -1,0 +1,151 @@
+<?php
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 WebTigers. Tiger™ and WebTigers™ are trademarks of WebTigers.
+/**
+ * Short links — the admin grid (rows from Tinylink_Service_Link::datatable), a create/edit modal and a stats
+ * modal. Markup only: behaviour is assets/js/tinylink.admin-index.js; strings ride the i18n carrier.
+ */
+$f  = $this->form;
+$el = static fn($n) => $f->getElement($n);
+$this->i18n([
+    'saved'        => 'tinylink.saved',
+    'deleted'      => 'tinylink.deleted',
+    'copied'       => 'tinylink.js.copied',
+    'confirmDel'   => 'tinylink.js.confirm_delete',
+    'newTitle'     => 'tinylink.modal.new',
+    'editTitle'    => 'tinylink.modal.edit',
+    'active'       => 'tinylink.status.active',
+    'disabled'     => 'tinylink.status.disabled',
+    'enable'       => 'tinylink.action.enable',
+    'disable'      => 'tinylink.action.disable',
+    'edit'         => 'tinylink.action.edit',
+    'del'          => 'tinylink.action.delete',
+    'stats'        => 'tinylink.action.stats',
+    'copy'         => 'tinylink.action.copy',
+    'networkError' => 'tinylink.js.network_error',
+    'expired'      => 'tinylink.status.expired',
+    'noReferrer'   => 'tinylink.stats.direct',
+    'search'       => 'tinylink.js.search',
+]);
+$this->pageScript('/_modules/tinylink/js/tinylink.admin-index.js', ['defer' => true]);
+?>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1"><?= $this->escape($this->t('tinylink.title')) ?></h1>
+        <p class="text-body-secondary mb-0"><?= $this->escape($this->t('tinylink.subtitle')) ?></p>
+    </div>
+    <div class="text-nowrap ms-3">
+        <button type="button" id="tl-add" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i><?= $this->escape($this->t('tinylink.action.new')) ?></button>
+    </div>
+</div>
+
+<div id="tl-feedback"></div>
+<div id="tl-root" data-short-base="<?= $this->escape($this->shortBase) ?>"></div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex gap-2 mb-3">
+            <label class="visually-hidden" for="tl-status"><?= $this->escape($this->t('tinylink.col.status')) ?></label>
+            <select id="tl-status" class="form-select form-select-sm w-auto">
+                <option value=""><?= $this->escape($this->t('tinylink.filter.all')) ?></option>
+                <option value="active"><?= $this->escape($this->t('tinylink.status.active')) ?></option>
+                <option value="disabled"><?= $this->escape($this->t('tinylink.status.disabled')) ?></option>
+            </select>
+        </div>
+        <div class="table-responsive">
+            <table id="tl-table" class="table table-hover align-middle w-100">
+                <thead>
+                    <tr>
+                        <th><?= $this->escape($this->t('tinylink.col.short')) ?></th>
+                        <th><?= $this->escape($this->t('tinylink.col.destination')) ?></th>
+                        <th class="text-end"><?= $this->escape($this->t('tinylink.col.clicks')) ?></th>
+                        <th><?= $this->escape($this->t('tinylink.col.status')) ?></th>
+                        <th><?= $this->escape($this->t('tinylink.col.updated')) ?></th>
+                        <th class="text-end" data-orderable="false"><span class="visually-hidden"><?= $this->escape($this->t('tinylink.col.actions')) ?></span></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create / edit -->
+<div class="modal fade" id="tl-modal" tabindex="-1" aria-labelledby="tl-modal-title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="tl-form" onsubmit="return false;" novalidate>
+        <?= $el('_csrf') ?>
+        <?= $el('link_id') ?>
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tl-modal-title"><?= $this->escape($this->t('tinylink.modal.new')) ?></h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= $this->escape($this->t('tinylink.action.close')) ?>"></button>
+        </div>
+        <div class="modal-body">
+          <div id="tl-modal-feedback"></div>
+          <div class="mb-3">
+            <label class="form-label" for="<?= $this->escape($el('destination')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.destination')) ?></label>
+            <?= $el('destination') ?>
+            <div class="form-text"><?= $this->escape($this->t('tinylink.field.destination_help')) ?></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="<?= $this->escape($el('slug')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.slug')) ?></label>
+            <div class="input-group">
+              <span class="input-group-text text-body-secondary small"><?= $this->escape($this->shortBase) ?></span>
+              <?= $el('slug') ?>
+            </div>
+            <div class="form-text"><?= $this->escape($this->t('tinylink.field.slug_help')) ?></div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="<?= $this->escape($el('redirect_type')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.redirect_type')) ?></label>
+              <?= $el('redirect_type') ?>
+              <div class="form-text"><?= $this->escape($this->t('tinylink.field.redirect_type_help')) ?></div>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="<?= $this->escape($el('expires_at')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.expires_at')) ?></label>
+              <?= $el('expires_at') ?>
+              <div class="form-text"><?= $this->escape($this->t('tinylink.field.expires_at_help')) ?></div>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="tl-merge" checked>
+            <label class="form-check-label" for="tl-merge"><?= $this->escape($this->t('tinylink.field.merge_params')) ?></label>
+            <div class="form-text"><?= $this->escape($this->t('tinylink.field.merge_params_help')) ?></div>
+          </div>
+          <div class="mb-0">
+            <label class="form-label" for="<?= $this->escape($el('notes')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.notes')) ?></label>
+            <?= $el('notes') ?>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= $this->escape($this->t('tinylink.action.cancel')) ?></button>
+          <button type="button" class="btn btn-primary" id="tl-save"><i class="fa-solid fa-floppy-disk me-2"></i><?= $this->escape($this->t('tinylink.action.save')) ?></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="modal fade" id="tl-stats-modal" tabindex="-1" aria-labelledby="tl-stats-title" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="tl-stats-title"><?= $this->escape($this->t('tinylink.stats.title')) ?></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= $this->escape($this->t('tinylink.action.close')) ?>"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-body-secondary small mb-3" id="tl-stats-link"></p>
+        <div class="row g-3 mb-3 text-center">
+          <div class="col-4"><div class="border rounded p-2"><div class="h4 mb-0" id="tl-stats-humans">0</div><div class="small text-body-secondary"><?= $this->escape($this->t('tinylink.stats.clicks_30d')) ?></div></div></div>
+          <div class="col-4"><div class="border rounded p-2"><div class="h4 mb-0" id="tl-stats-mobile">0</div><div class="small text-body-secondary"><?= $this->escape($this->t('tinylink.stats.mobile')) ?></div></div></div>
+          <div class="col-4"><div class="border rounded p-2"><div class="h4 mb-0" id="tl-stats-bots">0</div><div class="small text-body-secondary"><?= $this->escape($this->t('tinylink.stats.bots')) ?></div></div></div>
+        </div>
+        <h3 class="h6"><?= $this->escape($this->t('tinylink.stats.daily')) ?></h3>
+        <div class="d-flex align-items-end gap-1 mb-3 border-bottom" id="tl-stats-series" role="img" aria-label="<?= $this->escape($this->t('tinylink.stats.daily')) ?>"></div>
+        <h3 class="h6"><?= $this->escape($this->t('tinylink.stats.referrers')) ?></h3>
+        <ul class="list-group list-group-flush" id="tl-stats-refs"></ul>
+      </div>
+    </div>
+  </div>
+</div>

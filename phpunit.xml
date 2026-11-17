@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TigerTinylink PHPUnit config.
+    unit         — no DB, no network: the redirect helpers, the ACL file, input declarations.
+    integration  — the service + models against MariaDB/MySQL (TIGER_TEST_DB_NAME; self-skips without it).
+  Dependencies (Tiger_*/Zend_*/PHPUnit) resolve from a sibling tiger-core checkout: ../tiger-core/vendor/bin/phpunit
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="tests/bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerErrors="true">
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">services</directory>
+            <directory suffix=".php">models</directory>
+            <directory suffix=".php">controllers</directory>
+            <directory suffix=".php">forms</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APPLICATION_ENV" value="testing"/>
+    </php>
+</phpunit>

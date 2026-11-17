@@ -1,0 +1,40 @@
+{
+    "schema": "tiger.module/v1",
+    "slug": "tinylink",
+    "name": "TigerTinylink",
+    "version": "1.0.0",
+    "description": "Short links on your own domain: yoursite.com/l/spring redirects to any long URL with its parameters intact (UTM tags, affiliate refs, anything). Every click is counted locally and, when the site has GA4 or Matomo set up, sent to it as a server-side event. Create and manage links from the admin or over MCP.",
+    "author": {
+        "name": "WebTigers",
+        "url": "https://webtigers.com"
+    },
+    "homepage": "https://github.com/WebTigers/TigerTinylink",
+    "repository": "https://github.com/WebTigers/TigerTinylink",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "short-links",
+        "url-shortener",
+        "redirect",
+        "utm",
+        "campaign",
+        "analytics",
+        "marketing"
+    ],
+    "requires": {
+        "tiger": ">=1.65.0",
+        "php": ">=8.1"
+    },
+    "namespace": "Tinylink",
+    "provides": {
+        "acl": "configs/acl.ini",
+        "routes": "configs/routes.ini",
+        "migrations": "migrations",
+        "assets": "assets"
+    },
+    "media": {
+        "icon": "media/logo.jpg"
+    },
+    "pricing": {
+        "model": "free"
+    }
+}
