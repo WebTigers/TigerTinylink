@@ -30,7 +30,7 @@ abstract class IntegrationTestCase extends TestCase
     const ORG_B = '00000000-0000-4000-8000-0000000000bb';
 
     const CORE_MIGRATIONS = ['0001_create_org.php', '0009_create_config.php'];
-    const TABLES          = ['tinylink_click', 'tinylink_link', 'config', 'org'];
+    const TABLES          = ['tinylink_page_view', 'tinylink_page_item', 'tinylink_page', 'tinylink_click', 'tinylink_link', 'config', 'org'];
 
     private static ?Zend_Db_Adapter_Abstract $sharedDb = null;
     private static bool $schemaReady = false;
@@ -83,10 +83,10 @@ abstract class IntegrationTestCase extends TestCase
         Zend_Auth::getInstance()->getStorage()->write((object) ['org_id' => $orgId, 'user_id' => $userId, 'role' => $role]);
     }
 
-    /** Run a service method in process, as the signed-in identity. */
-    protected function call(string $method, array $params = []): object
+    /** Run a service method in process, as the signed-in identity (default: the links service). */
+    protected function call(string $method, array $params = [], string $service = \Tinylink_Service_Link::class): object
     {
-        return (new \Tinylink_Service_Link(['action' => $method] + $params))->getResponse();
+        return (new $service(['action' => $method] + $params))->getResponse();
     }
 
     /** The messages of a response, as one string. */

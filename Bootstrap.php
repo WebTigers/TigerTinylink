@@ -13,7 +13,7 @@
  */
 class Tinylink_Bootstrap extends Zend_Application_Module_Bootstrap
 {
-    /** The admin sidebar item. */
+    /** The admin sidebar group: Short links › Links, Links pages. */
     protected function _initAdminNav()
     {
         if (!class_exists('Tiger_Admin_Nav')) { return; }
@@ -21,9 +21,13 @@ class Tinylink_Bootstrap extends Zend_Application_Module_Bootstrap
             'key'      => 'tinylink',
             'label'    => 'tinylink.nav.label',
             'icon'     => 'fa-link',
-            'href'     => '/tinylink/admin',
-            'resource' => 'Tinylink_AdminController',
             'order'    => 24,
+            'children' => [
+                ['key' => 'tinylink-links', 'label' => 'tinylink.nav.links', 'icon' => 'fa-link',
+                 'href' => '/tinylink/admin', 'resource' => 'Tinylink_AdminController'],
+                ['key' => 'tinylink-pages', 'label' => 'tinylink.nav.pages', 'icon' => 'fa-address-card',
+                 'href' => '/tinylink/pages', 'resource' => 'Tinylink_PagesController'],
+            ],
         ]);
     }
 }

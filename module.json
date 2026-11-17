@@ -2,7 +2,7 @@
     "schema": "tiger.module/v1",
     "slug": "tinylink",
     "name": "TigerTinylink",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Short links on your own domain: yoursite.com/l/spring redirects to any long URL with its parameters intact (UTM tags, affiliate refs, anything). Every click is counted locally and, when the site has GA4 or Matomo set up, sent to it as a server-side event. Create and manage links from the admin or over MCP.",
     "author": {
         "name": "WebTigers",

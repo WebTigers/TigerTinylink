@@ -18,7 +18,11 @@ Short links: `/l/<slug>` → a stored destination. Slug/namespace `tinylink` / `
 | Admin screen | `controllers/AdminController.php`, `views/scripts/admin/index.phtml`, `assets/js/tinylink.admin-index.js` |
 | `/api` (admin, per-method ACL) | `services/Link.php` — datatable, get, save, setStatus, delete, stats |
 | Store | `models/Link.php` (`tinylink_link`), `models/Click.php` (`tinylink_click`) |
-| Forms (one CSRF salt) | `forms/Write.php` base; `Link`, `Status`, `Id` |
+| Forms (one CSRF salt) | `forms/Write.php` base; `Link`, `Status`, `Id`, `Page`, `PageItem`, `Reorder`, `PageId` |
+| Links pages — public (guest) | `controllers/PageController.php` (`/links/:handle`), `views/scripts/page/view.phtml`, `assets/css/tinylink.page.css` |
+| Links pages — admin | `controllers/PagesController.php`, `views/scripts/pages/*`, `assets/js/tinylink.pages-*.js` |
+| Links pages — `/api` | `services/Page.php` (list, get, save, delete, stats), `services/Block.php` (save, setStatus, delete, reorder) |
+| Links pages — store | `models/Page.php`, `models/PageItem.php`, `models/PageView.php`; `tinylink_click.page_id` |
 
 ## Invariants — do not break these
 
@@ -34,6 +38,11 @@ Short links: `/l/<slug>` → a stored destination. Slug/namespace `tinylink` / `
 - **Slugs are unique per org among live links** (`slug_active` generated column — the core TIGER-274 norm), so
   deleting a link frees its slug. Write rows with `update()`/`insert()` and explicit columns — never
   `$row->save()`, which would try to write the generated column.
+- **A links-page button is always a short link** (`/l/<slug>?_tlp=<page_id>`). `_tlp` attributes the tap and is
+  stripped before the redirect; GoController credits it only to a live page of the same org.
+- **Service names are one word** (`link`, `page`, `block`): the /api factory `ucfirst`s the name and the MCP
+  catalog lowercases it, so a two-word class (`PageItem`) would not round-trip to its ACL resource.
+- **The public page is markup + one stylesheet** driven by `--bs-*` tokens — no inline style, no JS needed.
 - **Every write validates through a `Tinylink_Form_*`**; a partial update seeds `_csrf` before
   `isValidPartial()` (core AGENTS.md). Every `/api` method has its own ACL rule and declares its input
   (`ModuleContractTest` enforces both).

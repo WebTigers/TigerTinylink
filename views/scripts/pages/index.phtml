@@ -1,0 +1,70 @@
+<?php
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 WebTigers. Tiger™ and WebTigers™ are trademarks of WebTigers.
+/**
+ * Links pages — the list of the org's pages (data from Tinylink_Service_Page::list) and a "new page" modal.
+ * Behaviour: assets/js/tinylink.pages-index.js.
+ */
+$f  = $this->form;
+$el = static fn($n) => $f->getElement($n);
+$this->i18n([
+    'views'      => 'tinylink.pages.views',
+    'edit'       => 'tinylink.action.edit',
+    'open'       => 'tinylink.pages.open',
+    'del'        => 'tinylink.action.delete',
+    'confirmDel' => 'tinylink.pages.confirm_delete',
+    'deleted'    => 'tinylink.page.deleted',
+    'isDefault'  => 'tinylink.pages.default',
+    'disabled'   => 'tinylink.status.disabled',
+    'empty'      => 'tinylink.pages.empty',
+    'netError'   => 'tinylink.js.network_error',
+]);
+$this->pageScript('/_modules/tinylink/js/tinylink.pages-index.js', ['defer' => true]);
+?>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1"><?= $this->escape($this->t('tinylink.pages.title')) ?></h1>
+        <p class="text-body-secondary mb-0"><?= $this->escape($this->t('tinylink.pages.subtitle')) ?></p>
+    </div>
+    <div class="text-nowrap ms-3">
+        <button type="button" id="tlp-add" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i><?= $this->escape($this->t('tinylink.pages.new')) ?></button>
+    </div>
+</div>
+
+<div id="tlp-feedback"></div>
+<div class="row g-3" id="tlp-list" aria-live="polite">
+    <div class="col-12 text-center text-body-secondary py-5"><span class="spinner-border spinner-border-sm me-2" role="status"></span></div>
+</div>
+
+<div class="modal fade" id="tlp-modal" tabindex="-1" aria-labelledby="tlp-modal-title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="tlp-form" onsubmit="return false;" novalidate>
+        <?= $el('_csrf') ?>
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tlp-modal-title"><?= $this->escape($this->t('tinylink.pages.new')) ?></h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= $this->escape($this->t('tinylink.action.close')) ?>"></button>
+        </div>
+        <div class="modal-body">
+          <div id="tlp-modal-feedback"></div>
+          <div class="mb-3">
+            <label class="form-label" for="<?= $this->escape($el('title')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.page_title')) ?></label>
+            <?= $el('title') ?>
+          </div>
+          <div class="mb-0">
+            <label class="form-label" for="<?= $this->escape($el('handle')->getId()) ?>"><?= $this->escape($this->t('tinylink.field.handle')) ?></label>
+            <div class="input-group">
+              <span class="input-group-text text-body-secondary small">/links/</span>
+              <?= $el('handle') ?>
+            </div>
+            <div class="form-text"><?= $this->escape($this->t('tinylink.field.handle_help')) ?></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= $this->escape($this->t('tinylink.action.cancel')) ?></button>
+          <button type="button" class="btn btn-primary" id="tlp-create"><i class="fa-solid fa-plus me-2"></i><?= $this->escape($this->t('tinylink.pages.create')) ?></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

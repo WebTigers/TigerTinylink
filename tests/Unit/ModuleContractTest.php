@@ -28,16 +28,20 @@ final class ModuleContractTest extends TestCase
         $granted = [];
         foreach ($prod->rules as $rule) {
             $this->assertStringStartsWith('Tinylink_', (string) $rule->resource);
-            if ((string) $rule->resource === 'Tinylink_Service_Link') {
-                $this->assertNotEmpty((string) $rule->privilege, 'the service is granted per method, never blanket');
+            if (strpos((string) $rule->resource, 'Tinylink_Service_') === 0) {
+                $this->assertNotEmpty((string) $rule->privilege, 'a service is granted per method, never blanket');
                 $this->assertNotSame('guest', (string) $rule->role, 'no service method is public');
-                $granted[] = (string) $rule->privilege;
+                $granted[] = strtolower(substr((string) $rule->resource, strlen('Tinylink_Service_'))) . '/' . (string) $rule->privilege;
             }
         }
         $gen = new Tiger_OpenApi_Generator();
-        $ops = array_map(static fn($k) => explode('/', $k)[2], array_keys($gen->schemasByOp($gen->discover([$this->root() . '/services']))));
+        $ops = array_map(static function ($k) { $p = explode('/', $k); return $p[1] . '/' . $p[2]; },
+            array_keys($gen->schemasByOp($gen->discover([$this->root() . '/services']))));
         sort($ops); sort($granted);
         $this->assertSame($ops, $granted, 'every operation has exactly one ACL rule');
+        foreach ($ops as $op) {
+            $this->assertMatchesRegularExpression('#^[a-z]+/#', $op, 'a one-word service name: the /api + MCP name must round-trip to the class');
+        }
     }
 
     public function testEveryOperationDeclaresItsInput(): void
@@ -52,6 +56,19 @@ final class ModuleContractTest extends TestCase
         $this->assertSame('tinylink', $offer['module'] ?? null);
         $m = json_decode((string) file_get_contents($this->root() . '/module.json'), true);
         $this->assertSame(['tinylink', 'Tinylink', 'free', 'BSD-3-Clause'], [$m['slug'], $m['namespace'], $m['pricing']['model'], $m['license']]);
+    }
+
+    public function testRuntimeCodeNeverNamesAControllerClass(): void
+    {
+        // ZF1's module autoloader does not load controllers, so `Tinylink_FooController::X` from any other class
+        // is a fatal at runtime — while this suite's bootstrap DOES load them, so tests would pass (it 500'd the
+        // links page on a real install once). Shared constants live on a service.
+        foreach (['controllers', 'services', 'models', 'forms', 'views'] as $dir) {
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->root() . '/' . $dir, \FilesystemIterator::SKIP_DOTS)) as $f) {
+                if (!$f->isFile()) { continue; }
+                $this->assertDoesNotMatchRegularExpression('/Tinylink_\w+Controller::/', (string) file_get_contents($f->getPathname()), $f->getFilename());
+            }
+        }
     }
 
     public function testEveryLocaleHasEveryKey(): void
